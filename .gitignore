@@ -4,3 +4,4 @@ venv
 .vscode
 etc
 ~*.xlsx
+data_for_test
