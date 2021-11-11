@@ -179,13 +179,13 @@ class Spch:
     def min_k_raskh(self):
         """Минимальный коэф-т расхода
         """        
+        #FIXME: setborder_avarage
         return self._min_k_raskh 
            
     @property
     def max_k_raskh(self):
         """Максимальный коэф-т расхода
         """  
-           
         return self._max_k_raskh
 
     def calc_xy(self, freq:float, k_raskh:float, z:float, R:float, t_in:float, k:float)->tuple:

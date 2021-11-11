@@ -1,10 +1,7 @@
 import unittest
 import sys
 sys.path.append('spch_module')
-from spch_module import ALL_SPCH_LIST
+from spch_module import ALL_SPCH_LIST #pylint: disable=import-error
 class init_test(unittest.TestCase):
-    def get_all_spch():
-        return ALL_SPCH_LIST
-        
     def test_laod_all(self):
-        self.assertRaises(Exception, get_all_spch)
+        self.assertGreater(len(ALL_SPCH_LIST), 0,"")
