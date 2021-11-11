@@ -137,7 +137,8 @@ class Spch:
         """ 
         return 4 * ob_raskh(Q, p_in, t_in, R, cur_plot_std) / 60. / (math.pi * (self.d ** 2) * self._vel(freq))
    
-
+    def koef_raskh_with_border(self, q_in, p_in, t_in):
+        pass
     def koef_nap(self, p_in:float, p_out:float, freq:int, t_in:float, R:float, kpd:float)->float:   
         """Коэф-т напора в зависиморсти от условий всасывания
 
@@ -173,8 +174,7 @@ class Spch:
         """        
         dh_val = dh(comp, z, t_in, R, DEFAULT_SETTINGS.k, kpd)
         v = self._vel(freq)
-        return dh_val / (v ** 2)        
-        
+        return dh_val / (v ** 2)            
 
     @property
     def min_k_raskh(self):
