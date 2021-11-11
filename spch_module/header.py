@@ -1,6 +1,7 @@
            
 from typing import Iterable
-from defaults import HEADERS_LIST
+from .defaults import HEADERS_LIST
+
 class Header:
     def __init__(self, header_titles:Iterable[str], dimens_titles:Iterable[str]):
         self._header = header_titles

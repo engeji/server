@@ -36,9 +36,3 @@ HEADERS_LIST = [
     {"dim":2, "key":"freq_dim", "title":"От. частота, д. ед"},    
 ]
 
-
-    
-
-
-    
-    
