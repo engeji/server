@@ -20,15 +20,3 @@ for f in os.listdir(path_base_files):
     with open(f'{path_base_files}\\{f}', 'r') as my_file:
         lines = my_file.read() 
     ALL_SPCH_LIST.append(Spch(None, lines, '.'.join(f.split('.')[:-1])))
-
-GROUPED_SPCH_LIST = [
-    ("{0:.0f}".format(key), list([SimpleNamespace(name=v.name, title=str(v), fnom=v.fnom)
-        for v in sorted(val, key=lambda x:x.stepen)]))
-            for key, val in groupby(sorted(ALL_SPCH_LIST, key=lambda x:x.ptitle), key=lambda x:x.ptitle)]
-
-
-
-LENGTH = [
-    10,9,11,9,9,9,9,3,7,5,5,7
-]
-
