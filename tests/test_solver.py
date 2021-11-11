@@ -71,7 +71,7 @@ if __name__ == "__main__":
     lim = Limit(**{
         dic['key']:dic['value']
     for dic in DEFAULT_LIMITS})  
-    dks9 = r'server\tests\for_tst_2step.xlsx'
+    dks9 = r'tests\for_tst_2step.xlsx'
     bor = BorderCollection([
         One_Border(**dic)
     for dic in BORDER_LIST])

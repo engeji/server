@@ -10,7 +10,7 @@ import os
 import sys
 
 #server\spch_module\base\dbqp.xls
-path_base = r'server\spch_module\base'
+path_base = r'spch_module\base'
 path_base_files = path_base + r'\text_files'
 wb = xlrd.open_workbook(path_base + r'\dbqp.xls')
 all_data = [{'name':lis, 'lis': wb.sheet_by_name(lis)} for lis in wb.sheet_names()]
