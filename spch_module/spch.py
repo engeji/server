@@ -81,10 +81,13 @@ class Spch:
         all_attribs = {
             lines[ind][0]:lines[ind][1]
         for ind in range(self.ind_end_points+1, len(lines))}
+        self.t_val = all_attribs['T']
+        self.r_val = all_attribs['R']
+        self.p_val = all_attribs['P']
+        self.d_val = all_attribs['d']
 
-        self.__dict__ = {**self.__dict__,
-            **{letter:all_attribs[letter]
-        for letter in ('R', 'T', 'P', 'stepen', 'd', 'ppred', 'mgth', 'ptitle', 'fnom')}}
+        for letter in ('stepen', 'ppred', 'mgth', 'ptitle', 'fnom'):
+            self.__setattr__(letter, all_attribs[letter])
         self.ptitle = float(self.ptitle)
         self._x_raskh, self._y_nap, self._y_kpd, self._freq = np.array([[
             self.koef_raskh(x.Q, x.PinMPa, x.freq, self.t_val, self.r_val, DEFAULT_SETTINGS.plot),
