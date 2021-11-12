@@ -3,8 +3,7 @@ from .defaults import DEFAULT_LIMITS, HEADERS_LIST
 # from .comp import Comp
 
 from typing import Iterable
-tup_cls = namedtuple('settings_tup', [dic['key']for dic in DEFAULT_LIMITS])
-DEFAULT_SETTINGS = tup_cls(**{dic['key']:dic['value'] for dic in DEFAULT_LIMITS})
+
 
 class Limit:
     __slots__ = (dic['key'] for dic in DEFAULT_LIMITS)

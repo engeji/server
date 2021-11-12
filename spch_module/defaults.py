@@ -35,4 +35,7 @@ HEADERS_LIST = [
     {"dim":2, "key":"kpd", "title":"Пол. кпд, д. ед"},    
     {"dim":2, "key":"freq_dim", "title":"От. частота, д. ед"},    
 ]
+from collections import namedtuple
 
+tup_cls = namedtuple('settings_tup', [dic['key']for dic in DEFAULT_LIMITS])
+DEFAULT_SETTINGS = tup_cls(**{dic['key']:dic['value'] for dic in DEFAULT_LIMITS})
