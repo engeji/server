@@ -1,22 +1,27 @@
-import xlrd
+"""Пакет для моделирования ДКС
+"""
 import math
-from typing import List
-from types import SimpleNamespace
-from itertools import groupby
-import numpy as np
-from collections import namedtuple
-from .spch import Spch
 import os
 import sys
+from collections import namedtuple
+from itertools import groupby
+from types import SimpleNamespace
+from typing import List
 
-#server\spch_module\base\dbqp.xls
-path_base = r'spch_module\base'
-path_base_files = path_base + r'\text_files'
-wb = xlrd.open_workbook(path_base + r'\dbqp.xls')
+import numpy as np
+import xlrd
+
+from .spch import Spch
+
+PATH_BASE = r'spch_module\base'
+PATH_BASE_FILES = PATH_BASE + r'\text_files'
+wb = xlrd.open_workbook(PATH_BASE + r'\dbqp.xls')
 all_data = [{'name':lis, 'lis': wb.sheet_by_name(lis)} for lis in wb.sheet_names()]
-ALL_SPCH_LIST:List[Spch] = list(filter(lambda x : float(x.mgth) == 16.0, [Spch(item['lis']) for item in all_data]))
+ALL_SPCH_LIST:List[Spch] = list(filter(lambda x : float(x.mgth) == 16.0, [
+    Spch(item['lis'])
+for item in all_data]))
 
-for f in os.listdir(path_base_files):
-    with open(f'{path_base_files}\\{f}', 'r') as my_file:
-        lines = my_file.read() 
+for f in os.listdir(PATH_BASE_FILES):
+    with open(f'{PATH_BASE_FILES}\\{f}', 'r') as my_file:
+        lines = my_file.read()
     ALL_SPCH_LIST.append(Spch(None, lines, '.'.join(f.split('.')[:-1])))
