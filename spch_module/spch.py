@@ -1,5 +1,4 @@
-"""
-    Класс для Сменной проточной части (СПЧ)
+"""Пакет для моделирования ДКС
 """
 import math
 import re
@@ -13,8 +12,7 @@ from .formulas import dh, my_z, ob_raskh
 from .defaults import DEFAULT_SETTINGS
 
 class Spch:
-    """
-    Класс для Сменной проточной части (СПЧ)
+    """Класс для Сменной проточной части (СПЧ)
     """
     def _init_from_txt(self, text, title):
         self.name = title
