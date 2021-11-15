@@ -1,9 +1,11 @@
 """Модуль тестирования инициализации
 """
-# import pytest
 from . import ALL_SPCH_LIST
 
-def test_has_file_db():
+
+def test_init_db():
     """[summary]
     """
+    print(*ALL_SPCH_LIST, sep='\n')
     assert isinstance(ALL_SPCH_LIST, list)
+    

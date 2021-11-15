@@ -4,6 +4,7 @@ import math
 import re
 from itertools import groupby
 from types import SimpleNamespace
+from typing import Tuple
 
 import numpy as np
 from numpy import linalg as LA
@@ -223,7 +224,7 @@ class Spch:
         return self._max_k_raskh
 
     def calc_xy(self, freq:float, k_raskh:float, z_val:float,
-        r_val:float, t_in:float, k_val:float)->tuple:
+        r_val:float, t_in:float, k_val:float)->Tuple[float]:
         """Расчет точки на ГДХ
 
         Args:
@@ -235,7 +236,10 @@ class Spch:
             k_val (float): Коэф-т политропы, б.м.
 
         Returns:
-            tuple: точка на ГДХ ([0]: Обьёмный расход, м3/мин, [1]: степень сжатия, д.ед)
+            Tuple[float]: точка на ГДХ (
+                [0]: Обьёмный расход, м3/мин,
+                [1]: степень сжатия, д.ед
+            )
         """
         u_val = self._vel(freq)
         point_x = k_raskh * math.pi * (self.d_val ** 2) * u_val * 60 / 4
@@ -247,7 +251,7 @@ class Spch:
         return (point_x, point_y)
 
     def get_no_dim_fact_points(self):
-        """Возврощяет python'like json структуру точек для гдх
+        """Возвращяет python'like json структуру точек для гдх
         """
         fact_points = groupby(zip(self._freq, self._x_raskh,
             self._y_kpd, self._y_nap), lambda p: p[0])
