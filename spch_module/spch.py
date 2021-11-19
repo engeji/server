@@ -1,4 +1,4 @@
-"""Пакет для моделирования ДКС
+"""Модуль для класса СПЧ
 """
 import math
 import re
@@ -10,7 +10,7 @@ import numpy as np
 from numpy import linalg as LA
 
 from .formulas import dh, my_z, ob_raskh
-from .defaults import DEFAULT_SETTINGS
+from .limit import DEFAULT_LIMIT
 
 class Spch:
     """Класс для Сменной проточной части (СПЧ)
@@ -91,7 +91,7 @@ class Spch:
             self.__setattr__(letter, all_attribs[letter])
         self.ptitle = float(self.ptitle)
         self._x_raskh, self._y_nap, self._y_kpd, self._freq = np.array([[
-            self.koef_raskh(x.Q, x.PinMPa, x.freq, self.t_val, self.r_val, DEFAULT_SETTINGS.plot),
+            self.koef_raskh(x.Q, x.PinMPa, x.freq, self.t_val, self.r_val, DEFAULT_LIMIT.plot_std),
             self.koef_nap(x.PinMPa,
                 self.p_val, x.freq, self.t_val, self.r_val, x.kpd),
             x.kpd,
@@ -154,7 +154,7 @@ class Spch:
         """
         return 4 * q_ob  / 60. / (math.pi * (self.d_val ** 2) * self._vel(freq))
 
-    def koef_raskh(self, q_in, p_in, freq, t_in, r_val, cur_plot_std):
+    def koef_raskh(self, q_in, p_in, freq, t_in, r_val, plot_std):
         """Коэффициент расхода
 
         Args:
@@ -163,12 +163,12 @@ class Spch:
             freq (float): Частота, об/мин
             t_in (float): Температура входа, К
             r_val (float, optional): постоянная больцмана поделеная на молярную массу
-            cur_plot_std (float, optional): Плотность при стандартных условиях, кг/м3
+            plot_std (float, optional): Плотность при стандартных условиях, кг/м3
 
         Returns:
             float: Возврощяет коеффициент расхода, при заданных условиях и текущей температуре, д.ед
         """
-        return 4 * ob_raskh(q_in, p_in, t_in, r_val, cur_plot_std) / 60. / (
+        return 4 * ob_raskh(q_in, p_in, t_in, r_val, plot_std=plot_std) / 60. / (
             math.pi * (self.d_val ** 2) * self._vel(freq))
 
     def koef_nap(self, p_in:float, p_out:float, freq:int,
@@ -187,7 +187,7 @@ class Spch:
             float: Возврощяет коеффициент напора, при заданных условиях и текущей температуре, д.ед
         """
         z_val = my_z(p_in, t_in)
-        dh_val = dh(p_out/p_in, z_val, t_in, r_val, DEFAULT_SETTINGS.k, kpd)
+        dh_val = dh(p_out/p_in, z_val, t_in, r_val, DEFAULT_LIMIT.k_val, kpd)
         v_val = self._vel(freq)
         return dh_val / (v_val ** 2)
 
@@ -206,7 +206,7 @@ class Spch:
         Returns:
             float: Возврощяет коеффициент напора, при параметрах, д.ед
         """
-        dh_val = dh(comp, z_val, t_in, r_val, DEFAULT_SETTINGS.k, kpd)
+        dh_val = dh(comp, z_val, t_in, r_val, DEFAULT_LIMIT.k_val, kpd)
         v_val = self._vel(freq)
         return dh_val / (v_val ** 2)
 
@@ -270,3 +270,9 @@ class Spch:
 
     def __repr__(self):
         return f'ГПА{self.mgth:.0f}-{self.ptitle:.0f} {self.stepen}'
+    @property
+    def short_name(self):
+        return f'{self.mgth:.0f}/{self.ptitle:.0f}-{self.stepen}'
+    def __format__(self, fmt):
+        res = f'{self.short_name}'
+        return f'{res:{fmt}}'
