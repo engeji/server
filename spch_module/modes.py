@@ -1,6 +1,6 @@
 """Модуль класса входных данных
 """
-from typing import Iterable, Union, List, TypeVar, NamedTuple, Tuple
+from typing import Iterable, Union, List
 from collections import namedtuple
 from .spch import Spch
 from .header import BaseCollection, Header, get_format_by_key
@@ -8,22 +8,34 @@ from .limit  import Limit
 from .formulas import my_z, dh
 
 
-list_items_mode = 't_in q_in p_in p_out'
-class Mode(namedtuple('Mode', list_items_mode)):...
+LIST_ITEMS_MODE = 't_in q_in p_in p_out'
+class Mode(namedtuple('Mode', LIST_ITEMS_MODE)):
+    """Класс режима работы
+    """
 
+LIST_ITEMS_SUMMARY = 'type_spch mght kpd comp_degree volume_rate percent_x'
+class StageSummary(namedtuple('Summary', LIST_ITEMS_SUMMARY)):
+    """Класс показателей работы ступени
+    """
 
-list_items_summary = 'type_spch mght kpd comp_degree volume_rate percent_x'
-class StageSummary(namedtuple('Summary', list_items_summary)):...
- 
+LIST_ITEMS_STAGE = 'type_spch w_cnt'
+class Stage(namedtuple('stage_tupe',LIST_ITEMS_STAGE)):
+    """Класс ступени ДКС
+    """
+    def calc_stage_summary(
+        self, q_in:float, p_in:float, t_in:float, lim:Limit, freq:float)->StageSummary:
+        """Расчет одной ступени
 
-class clas_name:
+        Args:
+            q_in (float): Дебит всей ступени, млн. м3/сут
+            p_in (float): Давление входа в ступень, МПа
+            t_in (float): Температура газа на входе в ступень, К
+            lim (Limit): Экземпляр класса ПВТ свойств
+            freq (float): Частота, об/мин
 
-self.a b
-
-
-list_items_stage = 'type_spch w_cnt'
-class Stage(namedtuple('stage_tupe',list_items_stage)):
-    def calc_stage_summary(self, q_in, p_in, t_in, lim:Limit, freq:float)->StageSummary:
+        Returns:
+            StageSummary: Показатель работы ступень
+        """
         spch:Spch = self.type_spch
         q_one = q_in / self.w_cnt
         k_raskh = spch.koef_raskh(
@@ -40,25 +52,64 @@ class Stage(namedtuple('stage_tupe',list_items_stage)):
         return StageSummary(spch, mght, kpd_pol, comp_degree, ob_raskh, percent_x)
 
 class ModeCollection(BaseCollection):
+    """Iterable-класс режимов работы
+    """
     def __init__(self, modes:Union[Mode, Iterable[Mode]]):
+        """Конструктор класса массива режимов работы
+
+        Args:
+            modes (Union[Mode, Iterable[Mode]]): Режим(ы) работы
+        """
         super().__init__(modes)
 
 class CompSummary(BaseCollection):
+    """Iterable-класс показателей работы компановки
+    """
     def __init__(self, res:Iterable[StageSummary], mode:Mode):
+        """Конструктор класса результатов работы компановки
+
+        Args:
+            res (Iterable[StageSummary]): Показатель(и) работы ступени
+            mode (Mode): Режим работы
+        """
         super().__init__(res)
         self.mode = mode
     def get_list_str_with_plus(self)->Iterable[str]:
+        """Строковое представление показателей работы компановки
+
+        Returns:
+            Iterable[str]: Возврощяет Iterable строковых представлений работы компановки,
+                в виде 'показатель1+показатель2+...показательN'
+        """
         return [
             '+'.join([
                 f'{item.__getattribute__(key):{get_format_by_key(key)}}'
             for item in self._list_items])
         for key in self._list_items[0]._asdict().keys()]
-        
+
 class Comp(BaseCollection):
+    """Класс компановки ДКС
+    """
     def __init__(self, lim: Limit, stages:Union[Stage, Iterable[Stage]]):
+        """Конструктор компановки ДКС
+
+        Args:
+            lim (Limit): ПВТ-свойтва при компримировани
+            stages (Union[Stage, Iterable[Stage]]): Ступень(и) ДКС
+        """
         self.lim = lim
         super().__init__(stages)
     def calc_comp_summary(self, mode: Mode, freqs:Iterable[float])->CompSummary:
+        """Расчет работы компановки
+
+        Args:
+            mode (Mode): Режим работы
+            freqs (Iterable[float]): Частота(ы), об/мин
+                (Количесвто элементов списка должно совпадать с количесвтом ступеней)
+
+        Returns:
+            CompSummary: возврощяет показатель работы компановки
+        """
         assert len(freqs) == len(self._list_items),""
         _p_in = mode.p_in
         _t_in = mode.t_in
@@ -74,7 +125,14 @@ class Comp(BaseCollection):
         return CompSummary(_res, mode)
 
 class CompSummaryCollection(Header):
+    """Iterable-класс режимов работы компановки
+    """
     def __init__(self, summarires: Iterable[CompSummary]):
+        """Конструктор Iterable-класса режимов работы компановки
+
+        Args:
+            summarires (Iterable[CompSummary]): режим(ы) работы компановки
+        """
         super().__init__((
             *summarires[0].mode._fields,
             *summarires[0]._list_items[0]._fields
