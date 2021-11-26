@@ -6,3 +6,4 @@ etc
 ~*.xlsx
 data_for_test
 Todo
+.pytest_cache

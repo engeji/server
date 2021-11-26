@@ -1,7 +1,10 @@
 import math
-from .formulas import my_z
-from .__init__ import Spch, np
 from itertools import chain
+
+import numpy as np
+
+from .formulas import my_z
+from .spch import Spch
 
 N_KPD = 1000
 N_MGHT = 5
@@ -10,10 +13,9 @@ def get_gdh_curvs(
     sp:Spch, temper=None, n=10, n_mgh=50, k=1.31, R=None,
     freqs=np.linspace(1.1, 0.7, 9), plot_st=0.698
     ):
-    t_current =  sp.T if temper == None else temper
-    R_curr = sp.R if R == None else R
+    t_current =  sp.t_val if temper == None else temper
+    R_curr = sp.r_val if R == None else R
     z_avg = my_z( sp.ptitle / sp.stepen / 10.0, t_current)
-    
     all_k_raskh = np.linspace(sp.min_k_raskh, sp.max_k_raskh, n)
     sp.calc_xy
     res_freq = []
@@ -57,7 +59,7 @@ def get_gdh_curvs(
                 'type':'kpd'
             })
     max_mght, min_mght = (
-        (f * math.pi * sp.d / 60) ** 3 * math.pi * sp.d * k_raskh  * nap * plot_st / ( 4 * kpd) / 1000
+        (f * math.pi * sp.d_val / 60) ** 3 * math.pi * sp.d_val * k_raskh  * nap * plot_st / ( 4 * kpd) / 1000
     for f, k_raskh, nap, kpd in (
         (
             max(freqs) * sp.fnom,
@@ -78,9 +80,9 @@ def get_gdh_curvs(
         for k_raskh in np.linspace(sp.min_k_raskh, sp.max_k_raskh, n_mgh):
             kpd = sp.calc_k_kpd(k_raskh)
             k_nap = sp.calc_k_nap(k_raskh)
-            u3 = 4 * kpd / (plot_st * k_nap * k_raskh * math.pi * (sp.d ** 2) * mght * 1000)
+            u3 = 4 * kpd / (plot_st * k_nap * k_raskh * math.pi * (sp.d_val ** 2) * mght * 1000)
             u = u3 ** (1 / 3)
-            freq = u * 60 / (math.pi * sp.d / sp.fnom)
+            freq = u * 60 / (math.pi * sp.d_val / sp.fnom)
             point_x, point_y = sp.calc_xy(freq, k_raskh, z_avg, R_curr, t_current, k)
             if max(freqs) > freq / sp.fnom > min(freqs):
                 temp.append({
@@ -103,5 +105,3 @@ def get_gdh_curvs(
         'z_avg': f'{z_avg:0.2f}',
         **no_dim,
     }
-
-

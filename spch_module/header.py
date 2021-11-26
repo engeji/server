@@ -1,6 +1,6 @@
 """Модуль для класса заголовков для переопределения repr в виде таблицы
 """
-from typing import Iterable, Union, List, NamedTuple
+from typing import Iterable, Union, List, NamedTuple, TypeVar
 
 HEADERS_LIST = [
     {"fmt":".2f", "key":"q_in", "title":"Комер. расх., млн. м3/сут"},
@@ -93,3 +93,7 @@ class BaseCollection(Header):
             raise StopIteration() from idx_err
         self._idx +=1
         return item
+    def __len__(self):
+        return len(self._data)
+    def __getitem__(self, index):
+        return self._list_items[index]

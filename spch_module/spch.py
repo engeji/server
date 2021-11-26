@@ -4,13 +4,13 @@ import math
 import re
 from itertools import groupby
 from types import SimpleNamespace
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
-from numpy import linalg as LA
 
-from .formulas import dh, my_z, ob_raskh
-from .limit import DEFAULT_LIMIT
+from .formulas import dh, my_z, ob_raskh, calc_c00
+from .limit import DEFAULT_LIMIT, Limit
+from .mode import Mode
 
 class Spch:
     """Класс для Сменной проточной части (СПЧ)
@@ -50,8 +50,8 @@ class Spch:
 
     def __init__(self, sheet=None, text=None, title=None):
         self._c00_kpd = self._c00_nap = ()
-        self.r_val=self.t_val=self.p_val=self.stepen=0
-        self.d_val=self.ppred=self.mgth=self.ptitle=self.fnom=0
+        self.r_val=self.t_val=self.p_val=self.stepen=.0
+        self.d_val=self.ppred=self.mgth=self.ptitle=self.fnom=.0
         self.name = ''
         if text is not None:
             self._init_from_txt(text, title)
@@ -97,11 +97,6 @@ class Spch:
             x.kpd,
             x.freq
         ] for x in all_points], dtype=object).T
-
-    def _calc_c00(self, x_val:list, y_val:list, power)-> tuple:
-        a_matrix = np.vstack([[v ** p for p in range(power)] for v in x_val])
-        return LA.lstsq(a_matrix, np.array(y_val, dtype=float), rcond=None)[0]
-
     def calc_k_nap(self, k_raskh:float, power:int=5)->float:
         """Расчет коеф-та напора по тренду
 
@@ -113,7 +108,7 @@ class Spch:
             float: Коэф-т напора в зависимости от коэф-та расхода
         """
         if len(self._c00_nap) != power:
-            self._c00_nap = self._calc_c00(self._x_raskh, self._y_nap, power)
+            self._c00_nap = calc_c00(self._x_raskh, self._y_nap, power)
         return sum(c00 * (k_raskh ** n) for n, c00 in enumerate(self._c00_nap))
 
     def calc_k_kpd(self, k_raskh:float, power:int=5)->float:
@@ -127,7 +122,7 @@ class Spch:
             float: политропный кпд в зависиммости от коэф-та расхода
         """
         if len(self._c00_kpd) != power:
-            self._c00_kpd = self._calc_c00(self._x_raskh, self._y_kpd, power)
+            self._c00_kpd = calc_c00(self._x_raskh, self._y_kpd, power)
         return sum(c00 * (k_raskh ** n) for n, c00 in enumerate(self._c00_kpd))
 
     def _vel(self, freq:float)->float:
@@ -276,3 +271,15 @@ class Spch:
     def __format__(self, fmt):
         res = f'{self.short_name}'
         return f'{res:{fmt}}'
+
+    def get_freq_bound(self,volume_rate:float)-> List[float]:
+        """Возвращяет Tuple(max, min) частот для заданных условий всасывания
+
+        Args:
+            volume_rate (float): Обьемный расход, м3/сут
+        Returns:
+            List[float]: List(max, min) частот для заданных условий всасывания
+        """
+        return [
+            4 * volume_rate / ((math.pi ** 2) * (self.d_val ** 3) * psi)
+        for psi in (self.max_k_raskh, self.min_k_raskh)]
