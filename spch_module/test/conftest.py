@@ -8,6 +8,7 @@ import pytest
 from ..limit import GET_DEFAULT_LIMIT, DEFAULT_LIMIT
 from ..mode import Mode
 from ..modes import ModeCollection, Comp, Limit, Stage
+from ..solver import Solver
 from .. import GET_SPCH_BY_NAME, GET_COMP_BY_NAME
 
 PATH_EXCEL = 'data_for_test\\for_tst_2step.xlsx'
@@ -44,4 +45,3 @@ def list_comp()->List[Comp]:
                 float(wcnt)
             for wcnt in prove.w_cnt.split('+')]))
     return res
-

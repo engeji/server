@@ -13,7 +13,7 @@ from .mode import Mode
 from .spch import Spch
 from .gdh import get_gdh_curvs
 
-LIST_ITEMS_SUMMARY = 'type_spch mght kpd comp_degree volume_rate percent_x t_out'
+LIST_ITEMS_SUMMARY = 'type_spch mght kpd p_in comp_degree volume_rate percent_x t_out'
 class StageSummary(namedtuple('Summary', LIST_ITEMS_SUMMARY)):
     """Класс показателей работы ступени
     """
@@ -49,7 +49,7 @@ class Stage(namedtuple('stage_tupe', LIST_ITEMS_STAGE)):
         percent_x = (k_raskh - spch.min_k_raskh) / (spch.max_k_raskh - spch.min_k_raskh) * 100
         mght = dh_val / kpd_pol * q_one / 24 / 60 / 60 * (10**6) * lim.plot_std / (10**3)
         t_out = t_in * (comp_degree ** (lim.k_val - 1 ) / (lim.k_val * kpd_pol))
-        return StageSummary(spch, mght, kpd_pol, comp_degree, ob_raskh_val, percent_x, t_out)
+        return StageSummary(spch, mght, kpd_pol, p_in, comp_degree, ob_raskh_val, percent_x, t_out)
 
     def get_freq_max_min(self, mode:Mode, lim:Limit)->Tuple[float]:
         return self.type_spch.get_freq_bound(mode.get_volume_rate(lim) / self.w_cnt)
