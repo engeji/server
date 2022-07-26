@@ -13,7 +13,21 @@ DEFAULT_LIMITS = [
 def GET_DEFAULT_LIMIT(key:str)->float:
     return next(filter(lambda dic: dic['key'] == key, DEFAULT_LIMITS))['value']
 LIST_LIMIT = 'r_val k_val plot_std t_avo dp_avo'
-class Limit(namedtuple('Limit', LIST_LIMIT)):...
+
+
+
+class Limit(namedtuple('Limit', LIST_LIMIT)):
+    """Класс граничных условий
+
+    Args:
+        r_val (float): R постоянная 
+        k_val (float): K постоянная 
+        plot_std (float): стандартная плотность  
+        t_avo (float): температура после АВО  
+        dp_avo (float): потери на АОВ  
+    """    
+    def get_t_out(self, comp_degree:float, t_in:float, kpd:float)->float:
+        return t_in * (comp_degree ** (self.k_val - 1 ) / (self.k_val * kpd))-273.15
 """Класс параметров свойств флюида
 """
 DEFAULT_LIMIT = Limit(**{

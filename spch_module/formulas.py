@@ -3,9 +3,19 @@
 from typing import Iterable, List
 import numpy as np
 from numpy import linalg as LA
+
+    
 def calc_c00(x_val:Iterable[float], y_val:Iterable[float], power:int)->List[float]:
     """[summary]
-
+    >>> x = [0,1,2,4,5]
+    >>> y = [100 + .1*val + 2 * (val**2) for val in x]
+    >>> calc_c00(x,y, 3)
+    [99.99999999999993, 0.10000000000005493, 1.9999999999999913]
+    """
+    
+    """
+    >>> np.vstack([[v for p in range(5)] for v in x])
+    sadsa
     Args:
         x_val (Iterable[float]): Массив ординат
         y_val (Iterable[float]): Массив абсцис
@@ -15,10 +25,14 @@ def calc_c00(x_val:Iterable[float], y_val:Iterable[float], power:int)->List[floa
         List[float]: Полиномиальные коэф-ты, начиная с 0
     """
     a_matrix = np.vstack([[v ** p for p in range(power)] for v in x_val])
-    return LA.lstsq(a_matrix, np.array(y_val, dtype=float), rcond=None)[0]
+    res = LA.lstsq(a_matrix, y_val, rcond=None)[0]
+    return [float(v) for v in res]
+    
+def calc_t_out(k_val, comp_degree:float, t_in:float, kpd:float)->float:
+        return t_in * (comp_degree ** (k_val - 1 ) / (k_val * kpd))-273.15
 
-def my_z(p, t, t_krit=190, p_krit=4.6):
-    return 1-0.427*p/p_krit*(t/t_krit)**(-3.688)
+def my_z(p, t, t_krit=190., p_krit=4.6):
+    return 1.-0.427*p/p_krit*(t/t_krit)**(-3.688)
 def my_z2(p, t, t_krit=190, p_krit=4.6):
     """Численный расчет сверхсжимаемости через
      разложение в ряд тейлора уравнение пенга-робинсона
@@ -88,8 +102,9 @@ def plot(p, t, R, t_krit=190, p_krit=4.6):
         float: плотность газа при указанные давлении и температуры, дж/кг
     """
     return p * (10 ** 6) / my_z(p,t, t_krit, p_krit) / R / t
-
-def ob_raskh(Q, p_in, t_in, R, plot_std=0.698):
+def p_z(plot, R, t_in):
+    return plot * R * t_in / (10**6)
+def ob_raskh(Q, p_in, t_in, R, plot_std=0.692):
     """Обьемный расход, м3/мин
 
     Args:
@@ -104,3 +119,19 @@ def ob_raskh(Q, p_in, t_in, R, plot_std=0.698):
     """
     q_m3_min = Q * (10 ** 6) / 24.0 / 60.0
     return q_m3_min * plot_std / plot(p_in, t_in, R)
+def q_in(volume_rate:float, p_in:float, t_in:float, R:float, plot_std:float=.692)->float:
+    """Комерческий расход, млн.м3/суь
+
+    Args:
+        volume_rate (float): Объемный расход, м3/мин
+        p_in (float): Текущее давление, МПа
+        t_in (float): Текущяя температура, К
+        R (float): Постоянная Больцмана поделеная на молярную массу.
+        plot_std (float, optional): стандартная плотность, кг/м3. Defaults to 0.698.
+
+    Returns:
+        float: Возврощяет комперческий расход относительно обьемного, млн. м3/сут
+    """    
+    q_mln = volume_rate/ ((10 ** 6) / 24.0 / 60.0)
+    return q_mln / plot_std * plot(p_in, t_in, R)
+

@@ -11,11 +11,11 @@ N_MGHT = 5
 
 def get_gdh_curvs(
     sp:Spch, temper=None, n=10, n_mgh=50, k=1.31, R=None,
-    freqs=np.linspace(1.1, 0.7, 9), plot_st=0.698
-    ):
-    t_current =  sp.t_val if temper == None else temper
-    R_curr = sp.r_val if R == None else R
-    z_avg = my_z( sp.ptitle / sp.stepen / 10.0, t_current)
+    freqs=np.linspace(1.1, 0.7, 9), plot_st=0.698,
+    z_in=None):
+    t_current =  sp.t_val if temper is None else temper
+    R_curr = sp.r_val if R is None else R
+    z_avg = my_z( sp.ptitle / sp.stepen / 10.0, t_current) if z_in is None else z_in
     all_k_raskh = np.linspace(sp.min_k_raskh, sp.max_k_raskh, n)
     sp.calc_xy
     res_freq = []

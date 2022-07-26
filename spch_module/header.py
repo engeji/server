@@ -1,11 +1,12 @@
 """Модуль для класса заголовков для переопределения repr в виде таблицы
 """
-from typing import Iterable, Union, List, NamedTuple, TypeVar
+from typing import Iterable, Union, List, TypeVar, Generic
+
 
 HEADERS_LIST = [
     {"fmt":".2f", "key":"q_in", "title":"Комер. расх., млн. м3/сут"},
-    {"fmt":".0f", "key":"t_in", "title":"Темп. входа, К"},
-    {"fmt":".2f", "key":"p_in_req", "title": "Давл. вх(треб), МПа"},
+    {"fmt":".0f", "key":"t_in", "title":"Т.вх, К"},
+    {"fmt":".2f", "key":"p_input", "title": "Давл. (треб), МПа"},
     {"fmt":".2f", "key":"p_out_req", "title": "Давл. вых(треб), МПа"},
     {"fmt":".2f", "key":"p_in", "title": "Давл. вх, МПа"},
     {"fmt":".2f", "key":"p_out", "title": "Давл. вых, МПа"},
@@ -15,14 +16,22 @@ HEADERS_LIST = [
     {"fmt":""   , "key":"isWork", "title": "Режим,"},
     {"fmt":".2f", "key":"p_out_res", "title": "Давл. вых.(расч), МПа"},
     {"fmt":".2f", "key":"comp_degree", "title":"Ст. сжатия, д. ед."},
-    {"fmt":".0f", "key":"w_cnt", "title": "К-во раб. ГПА, шт"},
+    {"fmt":".0f", "key":"w_cnt", "title": "ГПА, шт"},
     {"fmt":".0f", "key":"gasoline_rate", "title":"Расход топлива, тыс м3/сут"},
-    {"fmt":".0f", "key":"t_out", "title": "Темп. выхода, С"},
+    {"fmt":".0f", "key":"t_out", "title": "Т.вых, С"},
     {"fmt":".0f", "key":"percent_x", "title":"Помп. удал, д. ед"},
     {"fmt":".0f", "key":"volume_rate", "title":"Об. расход, м3/мин"},
     {"fmt":".2f", "key":"kpd", "title":"Пол. кпд, д. ед"},
-    {"fmt":".2f", "key":"freq_dim", "title":"От. частота, д. ед"},
+    {"fmt":""   , "key":"key", "title":"Вектор,"},
+    {"fmt":".2f", "key":"max_val", "title":"Максимум,"},
+    {"fmt":".2f", "key":"min_val", "title":"Минимум,"},
+    {"fmt":".0f", "key":"weight", "title":"Вес,"},
+
+    # {"fmt":".2f", "key":"freq_dim", "title":"От. частота, д. ед"},
 ]
+
+def GET_FILTER_KEYS(list_key:Iterable[str])->Iterable[str]:
+    return map(lambda dic2: dic2['key'], filter(lambda dic: dic['key'] in list_key, HEADERS_LIST))
 
 def get_dic_HEADERS_LIST(header:str):
     return next(filter(lambda dic: header in dic.values(), HEADERS_LIST))
@@ -65,35 +74,115 @@ class Header:
             for line in self._data]
         ])
 
-class BaseCollection(Header):
-    def __init__(self, items:Union[NamedTuple, Iterable[NamedTuple]]):
+T = TypeVar('T')
+class BaseStruct:
+    def __init__(self, **kwargs):
+        self.__dict__ = kwargs
+    def __repr__(self):
+        res = ','.join([
+            f"{key}:{self[key]}"
+        for key in self.__dict__])
+        return f"BaseStruct({res})"
+    @property
+    def get_keys(self):
+        return GET_FILTER_KEYS(self.__dict__.keys())
+    @classmethod
+    def get_keys_form_cls(cls):
+        return GET_FILTER_KEYS(dir(cls))
+
+    @property
+    def get_values(self):
+        return [
+            self.__dict__[key]
+        for key in self.get_keys]
+    def __getitem__(self, key):
+        return self.__getattribute__(key)
+    def __eq__(self, other):
+        return all((
+            self.__getattribute__("prime") == other.prime,
+            self.__getattribute__("second") == other.second
+        ))
+    def __ne__(self, other):
+        return not self.__eq__(other)
+    
+
+class MyList:
+    def __init__(self, val:Union[T,List[T]]):
+        # if isinstance(items, Iterable):
+            # super().__init__(items[0].get_keys)
+        if isinstance(val, list):
+            self._items = val
+        elif isinstance(val, MyList):
+            self._items = val._items
+        else:
+            self._items = [val]
+    def __format__(self, fmt):
+        return '+'.join([
+            f'{item:{fmt}}'
+        for item in self._items])
+    def __getitem__(self,idx)->float:
+        if len(self) <= idx:
+            return self._items[-1]
+        return self._items[idx]
+    def __repr__(self):
+        return repr(self._items)
+    def __len__(self):
+        return len(self._items)
+
+class BaseCollection(Header, Generic[T]):
+    def __init__(self, items:Union[T, Iterable[T]]):
         self._idx = 0
-        self._list_items:List[NamedTuple] = []
+        self._list_items:List[T] = []
+        # super().__init__(T.__annotations__.get_keys_from_cls())
         if isinstance(items, Iterable):
-            super().__init__(items[0]._fields)
+            super().__init__(items[0].get_keys)
             self._list_items = list(items)
             for item in items:
                 self.add_data([
-                    f'{item._asdict()[key]:{get_format_by_key(key)}}'
-                for key in item._asdict().keys()])
-        elif isinstance(items, NamedTuple):
-            super().__init__(items._fields)
-            self.add_data([
-                f'{items._asdict()[key]:{get_format_by_key(key)}}'
-            for key in items._asdict().keys()])
-            self._list_items = [items]
+                    f'{item[key]:{get_format_by_key(key)}}'
+                for key in item.get_keys])
         else:
-            assert False, "sad"
-    def __iter__(self):
-        return self
-    def __next__(self)->NamedTuple:
+            super().__init__(items.get_keys)
+            self._list_items = [items]
+            self.add_data([
+                f'{items[key]:{get_format_by_key(key)}}'
+            for key in items.get_keys])
+    # def __iter__(self):
+    #     return self
+    def __next__(self)->T:
         try:
             item = self._list_items[self._idx]
         except IndexError as idx_err:
+            self._idx = 0
             raise StopIteration() from idx_err
         self._idx +=1
         return item
-    def __len__(self):
+    def __iter__(self):
+        return self
+    def __len__(self)->int:
         return len(self._data)
-    def __getitem__(self, index):
-        return self._list_items[index]
+    def __getitem__(self, indecies)->T:
+        if isinstance(indecies,tuple):
+            dim1, dim2 = indecies       
+            return MyList([
+                item[dim2]
+            for item in self._list_items[dim1]])
+        else:
+            return self._list_items[indecies]
+    @property
+    def all_second(self):
+        return sum(map(lambda x: x.second, self))
+    @property
+    def all_prime(self):
+        val = sum(map(lambda x: x.prime, self))
+        return val if val >= 0 else 0
+    def __gt__(self, other):
+        if self.all_prime + other.all_prime <= 0:
+            return self.all_second > other.all_second
+        elif self.all_prime <= 0:
+            return False
+        elif other.all_prime <= 0:
+            return True
+        return self.all_second > other.all_second
+    def __lt__(self, other):
+        return not self.__gt__(other)
