@@ -1,24 +1,32 @@
-from kiwisolver import Solver
-from .. mode2 import Mode2
-from .. comp2 import Comp2
-from .. solver import Solver
-from .. facilities import get_comp_by_name
-from ..discript import BaseData
+from .. comp import Comp
+from ..mode import Mode
+from ..summary import Summary
 import pytest
-@pytest.mark.parametrize('comp, mode', [
-    (Comp2(['ГПА-ц3-16С-45-1.7(ККМ)', 'ГПА Ц3 16с76-1.7М'], [1,2]), Mode2()),
+# @pytest.mark.parametrize('func, array, param_name', [
+#     ('get_perc_by_mght', np.linspace(2000,20000,10), 'mght'),
+#     ('get_mght_by_perc', np.linspace(2,20,10), 'percent_x'),
+#     ('get_perc_by_comp', np.linspace(1,2,10), 'comp_degree'),
+# ])
+# def test_mght_and_perc(func, array, param_name):
+@pytest.mark.parametrize('mode, comp',[
+    (Mode(), Comp('ГПА-ц3-16С-45-1.7(ККМ)', 2)),
+    (Mode(), Comp(['ГПА-ц3-16С-45-1.7(ККМ)', 'ГПА Ц3 16с76-1.7М'], [1,2])),
 ])
-def test_func_all(comp:Comp2, mode:Mode2):
-    res = comp.calc_via_p_in(mode, [5200]*2)
-    print(res)
-    print(comp._get_freq_min_max_one_stage(0,mode))
-    print(comp._get_freq_min_max_one_stage(1,Mode2(mode.q_in, res.p_out[0], comp.t_avo)))
-    print(comp.w_cnt)
-    # print(comp.get_freq_bound_min_max(mode, [5200,5200]))
-    
-@pytest.mark.parametrize('comp, mode', [
-    (Comp2(), Mode2()),
+def test_calcs(mode:Mode, comp:Comp,):
+    sum_one = Summary(comp._stages[0], mode.q_in[0], mode.p_input, mode.t_in, 5200, comp.w_cnt[0])
+    print(sum_one)
+    sum_all = comp.calc_via_p_in(mode, [5200]*2)
+    print(sum_all)
+
+@pytest.mark.parametrize('mode, comp, freqs',[
+    (Mode(), Comp('ГПА-ц3-16С-45-1.7(ККМ)', 2), [5200]),
+    (Mode(), Comp(['ГПА-ц3-16С-45-1.7(ККМ)', 'ГПА Ц3 16с76-1.7М'], [1,2]), [5200,5200]),
 ])
-def test_func_solverl(comp:Comp2, mode:Mode2):
-    sol = Solver(comp, mode, 80)
-    print(sol)
+def test_border(mode:Mode, comp:Comp, freqs:float):
+    s_100, s_0 = comp.get_freq_bound_max_min(mode, freqs)
+    print(s_0)
+    print(s_100)
+    for idx in range(len(comp)):
+        assert abs(s_100.percent_x[idx] - 100) < .0001, f'Ошибка границы {s_100}'
+        assert abs(s_0.percent_x[idx] - 0) < .0001, f'Ошибка границы {s_0}'
+

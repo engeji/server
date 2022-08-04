@@ -1,7 +1,5 @@
 """Модуль для класса Limit - свойсва флюида и ограничения расчета
 """
-from collections import namedtuple
-
 DEFAULT_LIMITS = [
     {'key':'t_in', 'title':'Температура входа, К', 'value':285},
     {'key':'dp_avo', 'title':'Потери АВО, МПа', 'value':0.06},
@@ -16,7 +14,7 @@ LIST_LIMIT = 'r_val k_val plot_std t_avo dp_avo'
 
 
 
-class Limit(namedtuple('Limit', LIST_LIMIT)):
+class Limit:
     """Класс граничных условий
 
     Args:
@@ -26,6 +24,12 @@ class Limit(namedtuple('Limit', LIST_LIMIT)):
         t_avo (float): температура после АВО  
         dp_avo (float): потери на АОВ  
     """    
+    def __init__(self, r_val, k_val, plot_std, t_avo, dp_avo):
+        self.r_val = r_val
+        self.k_val = k_val
+        self.plot_std = plot_std
+        self.t_avo = t_avo
+        self.dp_avo = dp_avo
     def get_t_out(self, comp_degree:float, t_in:float, kpd:float)->float:
         return t_in * (comp_degree ** (self.k_val - 1 ) / (self.k_val * kpd))-273.15
 """Класс параметров свойств флюида

@@ -1,114 +1,88 @@
 """Модуль класса входных данных
 """
-from __future__ import annotations
-
-import operator
-from dataclasses import dataclass
-from functools import reduce
 from typing import Iterable, List, Tuple, Union
 
-import matplotlib.pyplot as plt
-import numpy as np
-import math
-from scipy.optimize import RootResults, root_scalar
+from flask import g
 
-from .formulas import dh, my_z, ob_raskh, plot
-from .gdh import get_gdh_curvs
-from .header import BaseCollection, BaseStruct, Header, get_format_by_key
-from .limit import Limit
+from . import get_spch_by_name
+from .formulas import calc_t_out, dh, my_z, ob_raskh
+from .header import Header, Header_list
+from .limit import DEFAULT_LIMIT, Limit
 from .mode import Mode
+from .summary import Summary
 from .spch import Spch
-from .summary import CompSummary
-from .weight import DEFAULT_BORDER, Border, Weight
-from .stage import Stage
+from .stage import _Stage
 
-
-
-class Comp(BaseCollection[Stage]):
+class Comp(Limit,Header):
     """Класс компановки ДКС
+
+    >>> comp = Comp('ГПА-ц3-16С-45-1.7(ККМ)', 1)
+    >>> comp
+    <BLANKLINE>
+     Тип СПЧ |ГПА(макс. раб)|ГПА(тек. раб)|   R    |Коефф. пол.|Ст. плот.|Т.АВО|Потери АВО
+             |      шт      |      шт     | Дж/кг К|   д. ед   |  кг/м3  |  К  |    МПа   
+    16/45-1.7|      1       |      1      | 500.8  |   1.31    |  0.692  | 293 |   0.06   
+    <BLANKLINE>
     """
-    def __init__(self, stages:Union[Stage, Iterable[Stage]]):
-        """Конструктор компановки ДКС
-
-        Args:
-            stages (Union[Stage, Iterable[Stage]]): Ступень(и) ДКС
-        """
-        super().__init__(stages)
+    # _w_cnt_current:int = [1]
+    def __init__(self, spch_name:Union[str, List[str]], gpa_cnt_max:Union[int,List[int]], lim:Union[Limit, List[Limit]]=None) -> None:                
+        self._keys = 'type_spch w_cnt w_cnt_current r_val k_val plot_std t_avo dp_avo'.split()
+        self._fmts = [Header_list[key].value['fmt'] for key in self._keys]
+        if isinstance(spch_name, str) and isinstance(gpa_cnt_max,int):  
+            lim = DEFAULT_LIMIT if lim == None else lim         
+            self._stages = [_Stage(spch_name, lim, gpa_cnt_max)]            
+        elif isinstance(spch_name, list) and isinstance(gpa_cnt_max,list):
+            assert len(spch_name) == len(gpa_cnt_max), 'Не верная размерность списков'
+            lim = [DEFAULT_LIMIT] * len(gpa_cnt_max) if lim == None else [lim] * len(gpa_cnt_max)         
+            self._stages = [_Stage(sp, lim[idx], gpa_cnt_max[idx]) for idx, sp in enumerate(spch_name)]
+        else:
+            raise TypeError(f'несоответствие типов аргументы инициализатора spch_name {spch_name} gpa_cnt_max{gpa_cnt_max}')        
+        self.w_cnt_current = self.w_cnt
     @property
-    def w_cnt_calc(self)->List[int]:
-        return  [
-            stage.w_cnt
-        for stage in self]
-    @w_cnt_calc.setter
-    def w_cnt_calc(self, value):
-        for w_val, stage in zip(value, self):
-            stage.w_cnt_current = w_val
-    def calc_comp_summary(self, mode: Mode, freqs:Iterable[float], border_list:Iterable[Border]=DEFAULT_BORDER)->CompSummary:
-        """Расчет работы компановки
-
-        Args:
-            mode (Mode): Режим работы
-            freqs (Iterable[float]): Частота(ы), об/мин
-                (Количесвто элементов списка должно совпадать с количесвтом ступеней)
-
-        Returns:
-            CompSummary: возврощяет показатель работы компановки
-        """
-        assert len(freqs) == len(self
-            ),"(Количесвто элементов списка частот должно совпадать с количесвтом ступеней)"
-        _p_in = mode.p_input
-        _t_in = mode.t_in
-        _res = []
-        for stage, freq in zip(self, freqs):
-            _res.append(
-                stage.calc_stage_summary_in(
-                    Mode(_t_in, mode.q_in[stage.idx], _p_in), freq
-                )
-            )
-            _p_in = _p_in * _res[-1].comp_degree - stage.lim.dp_avo
-            _t_in = stage.lim.t_avo
-        return sum(_res, start=CompSummary())
-    def calc_comp_summary_out(self, mode:Mode, freqs:Iterable[float], border_list:Iterable[Border]=DEFAULT_BORDER, is_in_border:bool=False)->CompSummary:
-        cur_mode = mode.clone()
+    def w_cnt(self)->List[int]: return [st._w_cnt for st in self._stages]
+    @property
+    def type_spch(self)->List[Spch]: return [st.type_spch for st in self._stages]
+    @property
+    def r_val(self)->List[float]: return [st.r_val for st in self._stages]
+    @property
+    def k_val(self)->List[float]: return [st.k_val for st in self._stages]
+    @property
+    def plot_std(self)->List[float]: return [st.plot_std for st in self._stages]
+    @property
+    def t_avo(self)->List[float]: return [st.t_avo for st in self._stages]
+    @property
+    def dp_avo(self)->List[float]: return [st.dp_avo for st in self._stages]
+    def _data(self)->List[List[str]]:
         res = []
-        for st, freq in list(zip(self, freqs))[-1::-1]:
-            stage:Stage = st
-            cur_mode.t_in = stage.lim.t_avo if stage.idx >= 1 else mode.t_in
-            summ = stage.calc_stage_summary_out(cur_mode, freq, is_in_border=is_in_border)
-            res.append(summ)
-            if summ is None:
-                break
-            cur_mode.p_input = res[-1].p_in + stage.lim.dp_avo
-        res.reverse()
-        return CompSummary(res, mode, border_list)
-    def get_freq_bound_min_max(self, mode:Mode, all_freqs:List[float])->List[Tuple[float,float]]:
+        for idx, st in enumerate(self._stages):
+            one_stage = []
+            for key, fmt in  zip(self._keys, self._fmts):
+                one_stage.append(format(getattr(self, key )[idx], fmt))
+            res.append(one_stage)
+        return res
+    def calc_via_p_in(self, mode:Mode, freq:List[float]) -> Summary:
+        res = Summary(self._stages[0], mode.q_in[0], mode.p_input, mode.t_in, freq[0], self.w_cnt_current[0])
+        for idx, stage in list(enumerate(self._stages))[1:]:
+            res += Summary(
+                stage, mode.q_in[idx], res.p_out[-1] - self.dp_avo[idx], 
+                self.t_avo[idx], freq[idx], self.w_cnt_current[idx])
+        return res
+
+    def get_freq_bound_max_min(self, mode:Mode, all_freqs:List[float])->Tuple[Summary,Summary]:
         assert len(all_freqs) == len(self
-            ),"(Количесвто элементов списка частот должно совпадать с количесвтом ступеней)"
-        res = [self[0].get_freq_min_max(mode)]
+            ),"(Количество элементов списка частот должно совпадать с количеством ступеней)"
+        res = [self._stages[0].get_freq_min_max(mode.q_in[0], mode.p_input, mode.t_in, self.w_cnt_current[0])]
         p_in = mode.p_input
         t_in = mode.t_in
-        for idx_stage, stage in list(enumerate(self))[1:]:
-            prev_summ = self[idx_stage-1].calc_stage_summary_in(
-                mode=Mode( t_in, mode.q_in[stage.idx], p_in), freq=all_freqs[idx_stage-1])
-            p_in = p_in * prev_summ.comp_degree - stage.lim.dp_avo
-            t_in = stage.lim.t_avo
-            res.append(stage.get_freq_min_max(Mode(t_in, mode.q_in[stage.idx], p_in)))
-        return res
-
-    def show_plt(self, mode:Mode, f_max:float, f_min:float, summ:CompSummary):
-        stage_1:Stage = self._list_items[0]
-        f_dim_max = f_max / stage_1.type_spch.fnom
-        f_dim_min = f_min / stage_1.type_spch.fnom
-        stage_1.show_plt(mode.t_in, f_dim_max, f_dim_min, summ)
-    
-    def get_freq_bound_min_max_out(self, mode: Mode, list_border:List[Border], all_freqs:List[float])->List[Tuple[CompSummary,CompSummary]]:
-        summs = self[-1].get_freq_min_max_out(mode, list_border[-1])
-        res = [summs]
-        cur_mode = mode.clone()
-        for stage_idx, st in list(enumerate(self))[-2::-1]:
-            prev_summ = self[stage_idx+1].calc_stage_summary_out(cur_mode, all_freqs[stage_idx+1])
-            cur_mode.p_input = prev_summ.p_in + st.lim.dp_avo
-            res.append(self[stage_idx].get_freq_min_max_out(cur_mode, list_border[stage_idx]))
-        res.reverse()
-        return res
-
+        for idx, stage in list(enumerate(self._stages))[1:]:
+            prev_summ = Summary(self._stages[idx-1], mode.q_in[idx-1], p_in, t_in, all_freqs[idx-1], self.w_cnt_current[idx-1])
+            p_in = prev_summ.p_out[0] - self.dp_avo[idx-1]
+            t_in = self.t_avo[idx]
+            res.append(stage.get_freq_min_max(mode.q_in[idx], p_in, t_in, self.w_cnt_current[idx]))
+            # q_one = (mode.q_in[-1] if len(mode.q_in) != len(self) else mode.q_in[idx_stage]) / self.w_cnt_current[idx_stage]
+            # prev_summ = self._calc_one_stage(q_one, p_in, t_in, idx_stage, all_freqs[idx_stage-1])
+            # p_in = p_in * prev_summ.comp_degree[0] - self.dp_avo[idx_stage-1]
+            # t_in = self.t_avo[idx_stage]
+            # res.append(self._get_freq_min_max_one_stage(idx_stage,Mode(mode.q_in, p_in, t_in)))
+        return tuple(Summary.sum(v) for v in zip(*res))
+    def __len__(self)->int:return len(self.w_cnt)

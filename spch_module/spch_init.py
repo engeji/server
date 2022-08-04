@@ -7,11 +7,8 @@ from itertools import groupby
 from types import SimpleNamespace
 from typing import Tuple, List, TYPE_CHECKING
 
-import numpy as np
-from scipy.optimize import root 
 from .formulas import dh, my_z, ob_raskh, calc_c00
-from .limit import DEFAULT_LIMIT, Limit
-from .mode import Mode
+from .limit import DEFAULT_LIMIT
 if TYPE_CHECKING:
     from .discript import BaseData
 class SpchInit:

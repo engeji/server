@@ -1,6 +1,5 @@
 """ Модуль классов дискриптеров
 """
-from multiprocessing.context import assert_spawning
 from typing import Iterable, Dict,Tuple, List, Union, TypeVar
 import enum
 from . __init__ import ALL_SPCH_LIST

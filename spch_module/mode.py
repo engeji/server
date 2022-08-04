@@ -1,67 +1,59 @@
-"""[summary]
-"""
-from dataclasses import dataclass
-from typing import Iterable, Union, List
-from collections import namedtuple
-
-from .header import BaseCollection, BaseStruct, MyList
-from .limit import Limit
-
-class Mode(BaseStruct):
+from typing import List, Union
+from .header import Header, Header_list
+class Mode(Header):
     """
-    Класс режимов работы ДКС
-
-    >>> Mode(273, 15, 2.67)
-    Mode(t_in=273, q_in=15, p_input=2.67)
-    >>> Mode(273, [15,20], 2.67)
-    Mode(t_in=273, q_in=15+20, p_input=2.67)
-
-    Args:
-        BaseStruct ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    def __init__(self, t_in, q_in, p_input):
-        self.t_in = t_in
-        self._q_in = MyList(q_in)
-        self.p_input = p_input
-    def __repr__(self):
-        # Mode(t_in=273, q_in=[15], p_in=2.67)
-        return f"Mode(t_in={self.t_in}, q_in={self.q_in}, p_input={self.p_input})"
-    @property
-    def get_keys(self):
-        return ['q_in', 't_in', 'p_input',]
-    @property
-    def q_in(self):
-        return self._q_in
-    @q_in.setter
-    def q_in(self, value):
-        self._q_in = MyList(value)
-    def clone(self):
-        return Mode(self.t_in, self._q_in, self.p_input)
-class ModeCollection(BaseCollection[Mode]):
-    """Iterable-класс режимов работы
-
-    >>> ModeCollection(Mode(273, 15, 2.67))
+    >>> Mode()
     <BLANKLINE>
-    Комер. расх. |Т.вх |Давл. (треб) 
-     млн. м3/сут |  К  |     МПа     
-        15.00    | 273 |    2.67     
-    >>> ModeCollection([
-    ... Mode(273, 15, 2.67),
-    ... Mode(273, [15,20], 2.67)
-    ... ])
+    Комер. расх.|Давл. (треб)|Т.вх
+     млн. м3/сут|     МПа    |  К 
+       20.00    |    2.00    |285 
     <BLANKLINE>
-    Комер. расх. |Т.вх |Давл. (треб) 
-     млн. м3/сут |  К  |     МПа     
-        15.00    | 273 |    2.67     
-     15.00+20.00 | 273 |    2.67     
+    >>> Mode(1, 99,999)
+    <BLANKLINE>
+    Комер. расх.|Давл. (треб)|Т.вх
+     млн. м3/сут|     МПа    |  К 
+        1.00    |   99.00    |999 
+    <BLANKLINE>
+    >>> Mode([20,25], 5, 293)
+    <BLANKLINE>
+    Комер. расх.|Давл. (треб)|Т.вх
+     млн. м3/сут|     МПа    |  К 
+    20.00+25.00 |    5.00    |293 
+    <BLANKLINE>
     """
-    def __init__(self, modes:Union[Mode, Iterable[Mode]]):
-        """Конструктор класса массива режимов работы
+    class List_q_in(list):
+        def __getitem__(self, index):        
+            if isinstance(index, slice):
+                return super().__getitem__(index)
+            try:
+                return super().__getitem__(index)
+            except IndexError:
+                return super().__getitem__(-1)
+    def __init__(self, q_in:Union[List[float],float]=None, p_input:float=None, t_in:float=None):
+        q_def:float = Header_list.q_in.value['default']
+        if q_in == None:
+            self.q_in = Mode.List_q_in([q_def])
+        else:
+            if isinstance(q_in, (float,int)):
+                self.q_in =  Mode.List_q_in([q_in])
+            else:
+                self.q_in = Mode.List_q_in(q_in)
+        self.p_input = p_input if p_input != None else Header_list.p_input.value['default']
+        self.t_in = t_in if t_in != None else Header_list.t_in.value['default']
+    def _data(self)->List[List[str]]:
+        fmts, keys = zip(*[
+            (Header_list[key].value['fmt'], key)
+        for key in self.__dict__])
 
-        Args:
-            modes (Union[Mode, Iterable[Mode]]): Режим(ы) работы
-        """
-        super().__init__(modes)
+        # res = [] 
+        # for idx_line in range(len(self.q_in)):
+        one_list = []
+        for key, fmt in zip(keys, fmts):
+            attr = getattr(self, key)#[idx_line]
+            if isinstance(attr, list):
+                value = '+'.join(map(lambda x: format(x, fmt), attr))
+            else:
+                value = format(attr,fmt)
+            one_list.append(value)
+        # res.append(one_list)
+        return [one_list]
