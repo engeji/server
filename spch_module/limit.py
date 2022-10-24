@@ -32,6 +32,8 @@ class Limit:
         self.dp_avo = dp_avo
     def get_t_out(self, comp_degree:float, t_in:float, kpd:float)->float:
         return t_in * (comp_degree ** (self.k_val - 1 ) / (self.k_val * kpd))-273.15
+
+        
 """Класс параметров свойств флюида
 """
 DEFAULT_LIMIT = Limit(**{

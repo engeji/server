@@ -32,7 +32,7 @@ def calc_t_out(k_val, comp_degree:float, t_in:float, kpd:float)->float:
         return t_in * (comp_degree ** (k_val - 1 ) / (k_val * kpd))-273.15
 
 def my_z(p, t, t_krit=190., p_krit=4.6):
-    return 1.-0.427*p/p_krit*(t/t_krit)**(-3.688)
+    return 1-0.427*p/p_krit*(t/t_krit)**(-3.688)
 def my_z2(p, t, t_krit=190, p_krit=4.6):
     """Численный расчет сверхсжимаемости через
      разложение в ряд тейлора уравнение пенга-робинсона

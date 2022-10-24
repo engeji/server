@@ -3,6 +3,7 @@
 from typing import Iterable, List, Tuple, Union
 
 from flask import g
+from numpy import result_type
 
 from . import get_spch_by_name
 from .formulas import calc_t_out, dh, my_z, ob_raskh
@@ -16,13 +17,30 @@ from .stage import _Stage
 class Comp(Limit,Header):
     """Класс компановки ДКС
 
-    >>> comp = Comp('ГПА-ц3-16С-45-1.7(ККМ)', 1)
-    >>> comp
+    >>> Comp('ГПА-ц3-16С-45-1.7(ККМ)', 1)
     <BLANKLINE>
      Тип СПЧ |ГПА(макс. раб)|ГПА(тек. раб)|   R    |Коефф. пол.|Ст. плот.|Т.АВО|Потери АВО
              |      шт      |      шт     | Дж/кг К|   д. ед   |  кг/м3  |  К  |    МПа   
     16/45-1.7|      1       |      1      | 500.8  |   1.31    |  0.692  | 293 |   0.06   
     <BLANKLINE>
+    >>> comp2 = Comp(['ГПА-ц3-16С-45-1.7(ККМ)', 'ГПА Ц3 16с76-1.7М'], [1,2])
+    >>> comp2
+    <BLANKLINE>
+     Тип СПЧ |ГПА(макс. раб)|ГПА(тек. раб)|   R    |Коефф. пол.|Ст. плот.|Т.АВО|Потери АВО
+             |      шт      |      шт     | Дж/кг К|   д. ед   |  кг/м3  |  К  |    МПа   
+    16/45-1.7|      1       |      1      | 500.8  |   1.31    |  0.692  | 293 |   0.06   
+    16/76-1.7|      2       |      2      | 500.8  |   1.31    |  0.692  | 293 |   0.06   
+    <BLANKLINE>
+    >>> [stage for stage in comp2]
+    [
+     Тип СПЧ |ГПА(макс. раб)|ГПА(тек. раб)|   R    |Коефф. пол.|Ст. плот.|Т.АВО|Потери АВО
+             |      шт      |      шт     | Дж/кг К|   д. ед   |  кг/м3  |  К  |    МПа   
+    16/45-1.7|      1       |      1      | 500.8  |   1.31    |  0.692  | 293 |   0.06   
+    , 
+     Тип СПЧ |ГПА(макс. раб)|ГПА(тек. раб)|   R    |Коефф. пол.|Ст. плот.|Т.АВО|Потери АВО
+             |      шт      |      шт     | Дж/кг К|   д. ед   |  кг/м3  |  К  |    МПа   
+    16/76-1.7|      2       |      2      | 500.8  |   1.31    |  0.692  | 293 |   0.06   
+    ]
     """
     # _w_cnt_current:int = [1]
     def __init__(self, spch_name:Union[str, List[str]], gpa_cnt_max:Union[int,List[int]], lim:Union[Limit, List[Limit]]=None) -> None:                
@@ -39,7 +57,7 @@ class Comp(Limit,Header):
             raise TypeError(f'несоответствие типов аргументы инициализатора spch_name {spch_name} gpa_cnt_max{gpa_cnt_max}')        
         self.w_cnt_current = self.w_cnt
     @property
-    def w_cnt(self)->List[int]: return [st._w_cnt for st in self._stages]
+    def w_cnt(self)->List[int]: return [st.w_cnt for st in self._stages]
     @property
     def type_spch(self)->List[Spch]: return [st.type_spch for st in self._stages]
     @property
@@ -86,3 +104,13 @@ class Comp(Limit,Header):
             # res.append(self._get_freq_min_max_one_stage(idx_stage,Mode(mode.q_in, p_in, t_in)))
         return tuple(Summary.sum(v) for v in zip(*res))
     def __len__(self)->int:return len(self.w_cnt)
+    def __iter__(self)->Iterable['Comp']: return map(lambda x: Comp(x.type_spch.name, x.w_cnt, x._lim), self._stages)
+    def __getitem__(self,idx)->'Comp':
+        if isinstance(idx, slice):
+            raise TypeError('иннах, слайсов нет пока')
+        else:
+            if idx <= (len(self) -1):
+                return Comp(self._stages[idx].type_spch.name, self.w_cnt[idx], self._stages[idx]._lim)
+            else:
+                raise TypeError(f'idx is {idx}{self} len is {len(self)}')
+    

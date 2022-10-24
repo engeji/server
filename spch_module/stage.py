@@ -8,7 +8,7 @@ class _Stage:
     def __init__(self, spch_name:str=None, lim:Limit=None, w_cnt:int=None):
         self.type_spch = get_spch_by_name(spch_name)
         self._lim = lim
-        self._w_cnt = w_cnt
+        self.w_cnt = w_cnt
     @property
     def k_val(self)->float: return self._lim.k_val
     @property
