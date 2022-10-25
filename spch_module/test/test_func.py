@@ -8,16 +8,12 @@ import pytest
 #     ('get_perc_by_comp', np.linspace(1,2,10), 'comp_degree'),
 # ])
 # def test_mght_and_perc(func, array, param_name):
-@pytest.mark.parametrize('mode, comp',[
-    (Mode(), Comp('ГПА-ц3-16С-45-1.7(ККМ)', 2)),
-    (Mode(30,None,None), Comp(['ГПА-ц3-16С-45-1.7(ККМ)', 'ГПА Ц3 16с76-1.7М'], [1,2])),
-])
-def test_calcs(mode:Mode, comp:Comp,):
-    sum_one = Summary(comp._stages[0], mode.q_in[0], mode.p_input, mode.t_in, 5200, comp.w_cnt[0])
-    print(sum_one)
-    sum_all = comp.calc_via_p_in(mode, [5200]*2)
-    print(mode)
-    print(sum_all)
+# @pytest.mark.parametrize('mode, comp',[
+#     (Mode(), Comp('ГПА-ц3-16С-45-1.7(ККМ)', 2)),
+#     (Mode(30,None,None), Comp(['ГПА-ц3-16С-45-1.7(ККМ)', 'ГПА Ц3 16с76-1.7М'], [1,2])),
+# ])
+def test_calcs(test_modes):
+    print(test_modes)
     
 
 @pytest.mark.parametrize('mode, comp, freqs',[

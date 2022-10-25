@@ -33,4 +33,5 @@ class Solver:
         ax.plot(self.freq_x_for_plot, self.freq_y_for_plot2)
         plt.show()
         
-    def func_constr(self,freq:List[float])->Tuple[Summary, Summary]:return self.comp.get_freq_bound_max_min(self.mode, freq)
+    def func_constr(self,freq:List[float])->Tuple[Summary, Summary]:
+        return self.comp.get_freq_bound_max_min(self.mode, freq)

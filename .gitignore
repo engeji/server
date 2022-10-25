@@ -7,3 +7,4 @@ etc
 data_for_test
 Todo
 .pytest_cache
+.ipynb_checkpoints
