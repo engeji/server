@@ -1,19 +1,6 @@
 """Модуль для класса Limit - свойсва флюида и ограничения расчета
 """
-DEFAULT_LIMITS = [
-    {'key':'t_in', 'title':'Температура входа, К', 'value':285},
-    {'key':'dp_avo', 'title':'Потери АВО, МПа', 'value':0.06},
-    {'key':'t_avo', 'title':'Температура после АВО, К', 'value':293},
-    {'key':'r_val', 'title':'Газовая постоянная R, Дж/кг К', 'value':500.8},
-    {'key':'k_val', 'title':'Коеффицинет политропы, д. ед', 'value':1.31},
-    {'key':'plot_std', 'title':'Стандартная плотность, кг/м3', 'value':.692},
-]
-def GET_DEFAULT_LIMIT(key:str)->float:
-    return next(filter(lambda dic: dic['key'] == key, DEFAULT_LIMITS))['value']
-LIST_LIMIT = 'r_val k_val plot_std t_avo dp_avo'
-
-
-
+from .header import Header_list
 class Limit:
     """Класс граничных условий
 
@@ -23,19 +10,13 @@ class Limit:
         plot_std (float): стандартная плотность  
         t_avo (float): температура после АВО  
         dp_avo (float): потери на АОВ  
+
     """    
-    def __init__(self, r_val, k_val, plot_std, t_avo, dp_avo):
-        self.r_val = r_val
-        self.k_val = k_val
-        self.plot_std = plot_std
-        self.t_avo = t_avo
-        self.dp_avo = dp_avo
+    def __init__(self, r_val=None, k_val=None, plot_std=None, t_avo=None, dp_avo=None):
+        self.r_val = Header_list.r_val.value['default']  if r_val == None else r_val
+        self.k_val = Header_list.k_val.value['default']  if k_val == None else k_val
+        self.plot_std = Header_list.plot_std.value['default']  if plot_std == None else plot_std
+        self.t_avo = Header_list.t_avo.value['default']  if t_avo == None else t_avo
+        self.dp_avo = Header_list.dp_avo.value['default']  if dp_avo == None else dp_avo
     def get_t_out(self, comp_degree:float, t_in:float, kpd:float)->float:
         return t_in * (comp_degree ** (self.k_val - 1 ) / (self.k_val * kpd))-273.15
-
-        
-"""Класс параметров свойств флюида
-"""
-DEFAULT_LIMIT = Limit(**{
-    key:GET_DEFAULT_LIMIT(key)
-for key in LIST_LIMIT.split()})

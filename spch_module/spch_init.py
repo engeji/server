@@ -8,9 +8,7 @@ from types import SimpleNamespace
 from typing import Tuple, List, TYPE_CHECKING
 
 from .formulas import dh, my_z, ob_raskh, calc_c00
-from .limit import DEFAULT_LIMIT
-if TYPE_CHECKING:
-    from .discript import BaseData
+# from .limit import Limit
 class SpchInit:
     """Класс для Сменной проточной части (СПЧ)
     """
@@ -30,7 +28,7 @@ class SpchInit:
                 float(next(filter(lambda x: x[0]==letter, [line.split('\t')
             for line in head.split('\n')]))[1])
         for letter in 'mght eps R T p_title Ppred fnom Z'.split()]
-        self.d_val = .8
+        self.d_val = .76
         dic_header = {head:ind for ind, head in enumerate(data.split('\n')[0].split('\t'))}
         all_points = [
             SimpleNamespace(
@@ -47,7 +45,9 @@ class SpchInit:
             self.koef_nap_by_comp(x.comp, x.freq, self.t_val, self.r_val, x.kpd, z_val),
         ) for x in all_points])
 
-    def __init__(self, sheet=None, text=None, title=None):
+    def __init__(self, k_val, plot_std, sheet=None, text=None, title=None):
+        self._k_val = k_val
+        self._plot_std = plot_std
         self._c00_kpd = self._c00_nap = ()
         self.r_val=self.t_val=self.p_val=self.stepen=.0
         self.d_val=self.ppred=self.mgth=self.ptitle=self.fnom=.0
@@ -90,13 +90,13 @@ class SpchInit:
             self.__setattr__(letter, all_attribs[letter])
         self.ptitle = float(self.ptitle)
         self._x_raskh, self._y_nap, self._y_kpd, self._freq = zip(*[(
-            self.koef_raskh(x.Q, x.PinMPa, x.freq, self.t_val, self.r_val, DEFAULT_LIMIT.plot_std),
+            self.koef_raskh(x.Q, x.PinMPa, x.freq, self.t_val, self.r_val, self._plot_std),
             self.koef_nap(x.PinMPa,
                 self.p_val, x.freq, self.t_val, self.r_val, x.kpd),
             x.kpd,
             x.freq
          ) for x in all_points])
-    def calc_k_nap(self, k_raskh:float, power:int=5)->float:
+    def calc_k_nap(self, k_raskh:float, power:int=6)->float:
         """Расчет коеф-та напора по тренду
 
         Args:
@@ -183,7 +183,7 @@ class SpchInit:
             float: Возврощяет коеффициент напора, при заданных условиях и текущей температуре, д.ед
         """
         z_val = my_z(p_in, t_in)
-        dh_val = dh(p_out/p_in, z_val, t_in, r_val, DEFAULT_LIMIT.k_val, kpd)
+        dh_val = dh(p_out/p_in, z_val, t_in, r_val, self._k_val, kpd)
         v_val = self.vel(freq) / 60.
         return dh_val / (v_val ** 2)
     def koef_nap_by_comp(self, comp:float, freq:int,
@@ -201,7 +201,7 @@ class SpchInit:
         Returns:
             float: Возврощяет коеффициент напора, при параметрах, д.ед
         """
-        dh_val = dh(comp, z_val, t_in, r_val, DEFAULT_LIMIT.k_val, kpd)
+        dh_val = dh(comp, z_val, t_in, r_val, self._k_val, kpd)
         v_val = self.vel(freq) /60.
         return dh_val / (v_val ** 2)
 

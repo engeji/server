@@ -2,13 +2,11 @@
 """
 from typing import Iterable, List, Tuple, Union
 
-from flask import g
 from numpy import result_type
 
-from . import get_spch_by_name
 from .formulas import calc_t_out, dh, my_z, ob_raskh
 from .header import Header, Header_list
-from .limit import DEFAULT_LIMIT, Limit
+from .limit import  Limit
 from .mode import Mode
 from .summary import Summary
 from .spch import Spch
@@ -47,11 +45,11 @@ class Comp(Limit,Header):
         self._keys = 'type_spch w_cnt w_cnt_current r_val k_val plot_std t_avo dp_avo'.split()
         self._fmts = [Header_list[key].value['fmt'] for key in self._keys]
         if isinstance(spch_name, str) and isinstance(gpa_cnt_max,int):  
-            lim = DEFAULT_LIMIT if lim == None else lim         
+            lim = Limit() if lim == None else lim         
             self._stages = [_Stage(spch_name, lim, gpa_cnt_max)]            
         elif isinstance(spch_name, list) and isinstance(gpa_cnt_max,list):
             assert len(spch_name) == len(gpa_cnt_max), 'Не верная размерность списков'
-            lim = [DEFAULT_LIMIT] * len(gpa_cnt_max) if lim == None else [lim] * len(gpa_cnt_max)         
+            lim = [Limit()] * len(gpa_cnt_max) if lim == None else [lim] * len(gpa_cnt_max)         
             self._stages = [_Stage(sp, lim[idx], gpa_cnt_max[idx]) for idx, sp in enumerate(spch_name)]
         else:
             raise TypeError(f'несоответствие типов аргументы инициализатора spch_name {spch_name} gpa_cnt_max{gpa_cnt_max}')        

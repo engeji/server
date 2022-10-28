@@ -1,8 +1,8 @@
 from typing import Iterable, List, Tuple, Union
 
-from . import get_spch_by_name
+from .facilities import get_spch_by_name
 from .formulas import calc_t_out, dh, my_z, ob_raskh
-from .limit import DEFAULT_LIMIT, Limit
+from .limit import Limit
 from .summary import Summary
 class _Stage:
     def __init__(self, spch_name:str=None, lim:Limit=None, w_cnt:int=None):

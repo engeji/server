@@ -1,8 +1,4 @@
-import imp
-from tkinter.messagebox import RETRY
 from typing import List, TYPE_CHECKING, Tuple
-
-from traitlets import Float
 
 from .comp import Comp
 from .mode import Mode
