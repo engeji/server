@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class Summary(Header):
     def __init__(self, _stage:'_Stage', q_stage:float, p_in:float, t_in:float, freq:float, w_cnt_current:int) -> None:
-        self._stages = [_stage]
+        self.stages = [_stage]
         self.type_spch = [_stage.type_spch]
         self.freq = [freq]
         self.p_in = [p_in]
@@ -31,7 +31,7 @@ class Summary(Header):
     @property
     def p_out(self): return [comp_degree * p_in for comp_degree, p_in in zip(self.comp_degree,self.p_in)]
 
-    def __add__(self, other:"Summary")->"Summary":
+    def __add__(self, other:"Summary")->"Summary": #FIXME: добавить None
         if other == None:
             return self
         assert isinstance(other, Summary), TypeError(f'Не поддерживамый тип для {other}')
@@ -44,5 +44,6 @@ class Summary(Header):
         for item in range(1, len(__iterable)):
             seed += __iterable[item]
         return seed
+    def __len__(self)->int:return len(self.stages)
 
         

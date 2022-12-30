@@ -10,10 +10,13 @@ import pytest
 ])
 def test_solver_func(mode:Mode, comp:Comp,):
     s = Solver(comp, mode)
-    print(f'freqs is {s.freq_x_for_plot}')
-    print(s.border_summs)
-    print(f'freqs y is {s.freq_y_for_plot1}')
-    print(f'freqs y is {s.freq_y_for_plot2}')
+    # print(f'freqs is {s.freq_x_for_plot}')
+    # print(s.border_summs)
+    # print(f'freqs y is {s.freq_y_for_plot1}')
+    # print(f'freqs y is {s.freq_y_for_plot2}')
+
+
+
 @pytest.mark.parametrize('a, res',[
     (1,1),
     (2,4),

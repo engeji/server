@@ -31,3 +31,7 @@ class Solver:
         
     def func_constr(self,freq:List[float])->Tuple[Summary, Summary]:
         return self.comp.get_freq_bound_max_min(self.mode, freq)
+
+    def objec_func(self, freq:List[float])->float: #TODO: целевая функция
+        res = self.comp.calc_via_p_in(self.mode, freq)
+        base_value = sum(res.mght)/ len(res) / (10**3)

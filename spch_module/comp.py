@@ -100,7 +100,7 @@ class Comp(Limit,Header):
             # p_in = p_in * prev_summ.comp_degree[0] - self.dp_avo[idx_stage-1]
             # t_in = self.t_avo[idx_stage]
             # res.append(self._get_freq_min_max_one_stage(idx_stage,Mode(mode.q_in, p_in, t_in)))
-        return tuple(Summary.sum(v) for v in zip(*res))
+        return tuple(Summary.sum(v) for v in zip(*res)) #FIXME: исправить на sum
     def __len__(self)->int:return len(self.w_cnt)
     def __iter__(self)->Iterable['Comp']: return map(lambda x: Comp(x.type_spch.name, x.w_cnt, x._lim), self._stages)
     def __getitem__(self,idx)->'Comp':
